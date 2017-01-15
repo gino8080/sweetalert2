@@ -11,7 +11,7 @@ let swal2Observer
  * Set type, text and actions on modal
  */
 const setParameters = (params) => {
-  const modal = dom.getModal()
+  const modal = dom.getModal() || dom.init()
 
   for (let param in params) {
     if (!defaultParams.hasOwnProperty(param) && param !== 'extraParams') {
@@ -704,7 +704,7 @@ const modalDependant = (...args) => {
 
     // Set modal min-height to disable scrolling inside the modal
     sweetAlert.recalculateHeight = dom.debounce(() => {
-      const modal = dom.getModal()
+      const modal = dom.getModal() || dom.init()
       const prevState = modal.style.display
       modal.style.minHeight = ''
       dom.show(modal)
@@ -937,11 +937,10 @@ const sweetAlert = (...args) => {
 }
 
 /*
- * Global function to determine if swal2 modal is visible
+ * Global function to determine if swal2 modal is shown
  */
 sweetAlert.isVisible = () => {
-  const modal = dom.getModal()
-  return dom.isVisible(modal)
+  return !!dom.getModal()
 }
 
 /*
@@ -949,7 +948,7 @@ sweetAlert.isVisible = () => {
  */
 sweetAlert.queue = (steps) => {
   queue = steps
-  const modal = dom.getModal()
+  const modal = dom.getModal() || dom.init()
   const resetQueue = () => {
     queue = []
     modal.removeAttribute('data-queue-step')
@@ -981,7 +980,7 @@ sweetAlert.queue = (steps) => {
 /*
  * Global function for getting the index of current modal in queue
  */
-sweetAlert.getQueueStep = () => dom.getModal().getAttribute('data-queue-step')
+sweetAlert.getQueueStep = () => dom.getModal() ? dom.getModal().getAttribute('data-queue-step') : null
 
 /*
  * Global function for inserting a modal to the queue
@@ -1007,6 +1006,9 @@ sweetAlert.deleteQueueStep = (index) => {
  */
 sweetAlert.close = sweetAlert.closeModal = (onComplete) => {
   const modal = dom.getModal()
+  if (!modal) {
+    return
+  }
   dom.removeClass(modal, swalClasses.show)
   dom.addClass(modal, swalClasses.hide)
 
@@ -1025,10 +1027,8 @@ sweetAlert.close = sweetAlert.closeModal = (onComplete) => {
 
   dom.resetPrevState()
 
-  const hideModalAndResetState = () => {
-    dom.hide(modal)
-    modal.style.minHeight = ''
-    dom.removeClass(sweetContainer, swalClasses.in)
+  const removeModalAndResetState = () => {
+    sweetContainer.remove()
     dom.removeClass(document.body, swalClasses.in)
     undoScrollbar()
     undoIOSfix()
@@ -1039,12 +1039,12 @@ sweetAlert.close = sweetAlert.closeModal = (onComplete) => {
     modal.addEventListener(dom.animationEndEvent, function swalCloseEventFinished () {
       modal.removeEventListener(dom.animationEndEvent, swalCloseEventFinished)
       if (dom.hasClass(modal, swalClasses.hide)) {
-        hideModalAndResetState()
+        removeModalAndResetState()
       }
     })
   } else {
-    // Otherwise, hide immediately
-    hideModalAndResetState()
+    // Otherwise, remove immediately
+    removeModalAndResetState()
   }
   if (onComplete !== null && typeof onComplete === 'function') {
     onComplete(modal)

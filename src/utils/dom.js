@@ -80,7 +80,7 @@ export const init = () => {
  */
 export const elementByClass = (className) => sweetContainer.querySelector('.' + className)
 
-export const getModal = () => document.body.querySelector('.' + swalClasses.modal) || init()
+export const getModal = () => document.body.querySelector('.' + swalClasses.modal)
 
 export const getIcons = () => {
   const modal = getModal()
