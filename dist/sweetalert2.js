@@ -484,6 +484,14 @@ var setParameters = function setParameters(params) {
       } else {
         content.appendChild(params.html.cloneNode(true));
       }
+    }
+    else if (typeof params.html === 'function') {
+      content.innerHTML = "loading.."
+      params.html().then(function(html_async){
+        content.innerHTML = "";
+        content.appendChild(html_async[0]);
+        show(content);
+      })
     } else if (params.html) {
       content.innerHTML = params.html;
     } else if (params.text) {
